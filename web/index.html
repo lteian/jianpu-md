@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>简谱工作台 · jianpu-md</title>
+<link rel="stylesheet" href="./style.css?v=00000000">
+</head>
+<body>
+<header id="bar">
+  <span class="brand" title="jianpu-md 工作台">简谱</span>
+  <button id="btnPlay" class="primary">▶ 播放</button>
+  <button id="btnStop">■ 停止</button>
+  <label>速度 <input id="bpm" type="number" min="20" max="300" step="1" value="88" title="♩= 每分钟拍数，可直接输入"> ♩</label>
+  <select id="timbre" title="音色">
+    <option value="erhu">二胡</option>
+    <option value="piano">钢琴</option>
+    <option value="sine">正弦</option>
+  </select>
+  <span class="sep"></span>
+  <label class="paper">纸张
+    <select id="paper">
+      <option value="A4">A4</option>
+      <option value="A5">A5</option>
+      <option value="B5">B5</option>
+      <option value="A3">A3</option>
+      <option value="Letter">Letter</option>
+    </select>
+    <select id="orient">
+      <option value="portrait">竖版</option>
+      <option value="landscape">横版</option>
+    </select>
+  </label>
+  <label class="gapbox" title="行距：100 为默认。谱子多出一行、想压回一页时调小它（最小 85 左右，再小会挤到低音点）">行距
+    <input id="gap" type="number" min="60" max="180" step="1" value="100">%
+  </label>
+  <button id="btnFit" title="自动一步一步压缩行距，直到整首谱只剩一页">压一页</button>
+  <span id="pageCount" title="共几页"></span>
+  <span class="sep"></span>
+  <select id="layoutPick" title="版式">
+    <option value="default">版式：默认</option>
+    <option value="jpw">版式：JPWORD</option>
+  </select>
+  <button id="btnSrc" title="显示 / 隐藏左边的源码栏（默认隐藏，直接在谱上打谱）">源码</button>
+  <button id="btnNew" title="新建一张空白曲谱">新建</button>
+  <button id="btnOpen">打开</button>
+  <button id="btnSave" class="primary2">保存</button>
+  <span id="fileName" title="当前文件"></span>
+  <span class="sep"></span>
+  <button id="btnSvg" title="导出矢量图（打印级）">SVG</button>
+  <button id="btnPng" title="导出位图（约 300dpi）">PNG</button>
+  <button id="btnPrint" title="打印或存成 PDF">打印</button>
+  <span class="sep"></span>
+  <label class="grow">缩放 <input id="zoom" type="range" min="50" max="160" step="5" value="100"><span id="zoomv">100%</span></label>
+  <select id="tpl" title="载入示例">
+    <option value="">载入示例…</option>
+    <option value="xiaoxingxing">小星星（二胡入门）</option>
+    <option value="grammar">语法速览</option>
+    <option value="jpw">JPW-ABC 兼容样例（小练习曲）</option>
+    <option value="demo">原创示范曲（32 小节综合）</option>
+  </select>
+</header>
+
+<div id="diag"></div>
+
+<nav id="menubar" aria-label="菜单">
+  <span class="quick">
+    <button id="mPlay" title="播放 / 停止（Ctrl+Enter）">▶ 播放</button>
+    <button id="mStop" title="停止">■ 停止</button>
+    <button id="mPrint" title="打印 / 存 PDF">打印</button>
+    <span class="mzoom">
+      <button id="mZoomOut" title="缩小">−</button>
+      <span id="mZoomv">100%</span>
+      <button id="mZoomIn" title="放大">＋</button>
+    </span>
+  </span>
+</nav>
+
+<main id="wrap">
+<div id="tools">
+  <div class="tgrp" title="音级（0 = 休止）">
+    <button class="tbtn" data-op="digit" data-v="1">1</button>
+    <button class="tbtn" data-op="digit" data-v="2">2</button>
+    <button class="tbtn" data-op="digit" data-v="3">3</button>
+    <button class="tbtn" data-op="digit" data-v="4">4</button>
+    <button class="tbtn" data-op="digit" data-v="5">5</button>
+    <button class="tbtn" data-op="digit" data-v="6">6</button>
+    <button class="tbtn" data-op="digit" data-v="7">7</button>
+    <button class="tbtn" data-op="digit" data-v="0">0</button>
+  </div>
+  <div class="tgrp" title="时值：全音符 / 二分 / 四分 / 八分 / 十六分 / 三十二分">
+    <button class="tbtn" data-op="dur" data-v="0" title="全音符">全</button>
+    <button class="tbtn" data-op="dur" data-v="1" title="二分音符">2分</button>
+    <button class="tbtn" data-op="dur" data-v="2" title="四分音符">4分</button>
+    <button class="tbtn" data-op="dur" data-v="3" title="八分音符">8分</button>
+    <button class="tbtn" data-op="dur" data-v="4" title="十六分音符">16</button>
+    <button class="tbtn" data-op="dur" data-v="5" title="三十二分音符">32</button>
+  </div>
+  <div class="tgrp" title="变音记号 / 附点 / 增时线">
+    <button class="tbtn" data-op="acc" data-v="1" title="升号">♯</button>
+    <button class="tbtn" data-op="acc" data-v="-1" title="降号">♭</button>
+    <button class="tbtn" data-op="acc" data-v="0" title="还原号">♮</button>
+    <button class="tbtn" data-op="dots" data-v="1" title="加一个附点">附点</button>
+    <button class="tbtn" data-op="dots" data-v="-1" title="去掉附点">去点</button>
+    <button class="tbtn" data-op="dashes" data-v="1" title="加一条增时线（变长一拍）">附横</button>
+    <button class="tbtn" data-op="dashes" data-v="-1" title="去掉一条增时线">去横</button>
+  </div>
+  <div class="tgrp" title="八度（点在上 / 点在下）">
+    <button class="tbtn" data-op="oct" data-v="1" title="加一个高音点">ˊ高</button>
+    <button class="tbtn" data-op="oct" data-v="-1" title="加一个低音点">ˋ低</button>
+  </div>
+  <div class="tgrp" title="弓法（同一个音再点一次取消）">
+    <button class="tbtn" data-op="mark" data-v="la" title="拉弓（下弓）∏">拉弓</button>
+    <button class="tbtn" data-op="mark" data-v="tui" title="推弓（上弓）∨">推弓</button>
+  </div>
+  <div class="tgrp" title="指法：在音符上方标小字（宀 = 空弦，一 二 三 四 = 第几指）。同一个音再点一次取消">
+    <button class="tbtn fing" data-op="mark" data-v="0" title="空弦（宀）">宀空弦</button>
+    <button class="tbtn fing" data-op="mark" data-v="1" title="一指（食指）">一指</button>
+    <button class="tbtn fing" data-op="mark" data-v="2" title="二指（中指）">二指</button>
+    <button class="tbtn fing" data-op="mark" data-v="3" title="三指（无名指）">三指</button>
+    <button class="tbtn fing" data-op="mark" data-v="4" title="四指（小指）">四指</button>
+  </div>
+  <div class="tgrp" title="弦位：内弦 / 外弦。标了弦位就不再显示指法小字（取消弦位后指法自己回来）">
+    <button class="tbtn str" data-op="mark" data-v="nei" title="内弦">内</button>
+    <button class="tbtn str" data-op="mark" data-v="wai" title="外弦">外</button>
+  </div>
+  <div class="tgrp" title="选中两个及以上的音">
+    <button class="tbtn" data-act="slur">连弓</button>
+    <button class="tbtn" data-act="insert">插入</button>
+    <button class="tbtn danger" data-act="del">删除</button>
+  </div>
+  <div class="tgrp">
+    <button class="tbtn" data-act="undo">↶</button>
+    <button class="tbtn" data-act="redo">↷</button>
+  </div>
+  <span id="selinfo">点谱面上的音开始编辑</span>
+</div>
+
+  <section id="left">
+    <textarea id="src" spellcheck="false" autocomplete="off"></textarea>
+  </section>
+  <section id="pages"></section>
+</main>
+
+<footer id="status"></footer>
+
+<div id="marquee"></div>
+
+<div id="toast"></div>
+
+<script type="module" src="./app.js?v=00000000"></script>
+</body>
+</html>

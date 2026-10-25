@@ -1,0 +1,509 @@
+:root {
+  --ink: #111;
+  --paper: #fff;
+  --ui: #1e2026;
+  --ui2: #2a2d35;
+  --line: #3a3e48;
+  --fg: #e8e9ec;
+  --accent: #4ea1ff;
+  --warn: #ffb547;
+  --err: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #6b6f78;
+  color: var(--fg);
+  font: 14px/1.5 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ---------------------------------------------------------------- 工具栏 */
+#bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 10px;
+  background: var(--ui);
+  border-bottom: 1px solid #000;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+#bar .brand { font-weight: 700; letter-spacing: .5px; margin-right: 6px; color: #cfd3da; }
+#bar .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+#bar .grow { display: flex; align-items: center; gap: 6px; }
+#bar label { display: flex; align-items: center; gap: 6px; color: #b9bec7; font-size: 12px; }
+#bar button, #bar select {
+  background: var(--ui2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+#bar button:hover, #bar select:hover { background: #343845; }
+#bar button.primary { background: #2f6fd0; border-color: #2f6fd0; }
+#bar button.primary2 { background: #256b4a; border-color: #256b4a; }
+#bar button.primary2:hover { background: #2e8259; }
+#bar #fileName { color: #8b909b; font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+#bar button.primary.on { background: #b4442f; border-color: #b4442f; }
+#bar input[type=range] { width: 60px; accent-color: var(--accent); }
+/* 顶栏在 1440 下不能溢出：这几个下拉给固定宽度，文字长就截断 */
+#bar #tpl { width: 132px; }
+#bar #timbre { width: 58px; }
+#bar #paper, #bar #orient { width: 62px; }
+/* 速度：可以直接输入 */
+#bar input[type=number] {
+  width: 3.6em; padding: 2px 4px; text-align: center;
+  border: 1px solid #ccd; border-radius: 4px; font: inherit; font-variant-numeric: tabular-nums;
+}
+#bar input[type=number]:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+/* 行距 + 页数 */
+#bar .gapbox input[type=number] { width: 3.1em; }
+#bar #pageCount { color: #8b909b; font-size: 12px; font-variant-numeric: tabular-nums; }
+#bar #pageCount.many { color: #e0a33a; }
+
+/* ---------------------------------------------------------------- 编辑栏 */
+#tools {
+  z-index: 19;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 12px;
+  background: #171a1f;
+  border-bottom: 1px solid #000;
+  white-space: nowrap;
+  font-size: 12px;
+}
+#tools .tgrp { display: flex; gap: 3px; align-items: center; padding-right: 10px; border-right: 1px solid var(--line); }
+#tools .tgrp:last-of-type { border-right: 0; }
+#tools .tbtn {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 7px;
+  background: var(--ui2);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#tools .tbtn:hover { background: #3a3f4d; }
+#tools .tbtn:active { background: #4a5163; }
+#tools .tbtn.danger:hover { background: #7a2a24; border-color: #a33; }
+/* 指法（宀一二三四）与弦位（内/外）：小字记号，跟弓法区分开 */
+#tools .tbtn.fing { color: #d8c48a; }
+#tools .tbtn.str { color: #8fc6e8; font-weight: 600; }
+#tools.nosel .tbtn { opacity: .38; pointer-events: none; }
+#tools .tbtn[data-act^="undo"], #tools .tbtn[data-act^="redo"] { pointer-events: auto; opacity: 1; }
+#tools #selinfo { color: #8b909b; }
+
+/* ---------------------------------------------------------------- 布局 */
+body { display: flex; flex-direction: column; }
+#bar, #tools { flex: none; }
+#wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  /* 用 grid-template-areas 定位，而不是靠子元素顺序：
+     源码栏 display:none 之后，后面���元素**不会**往前挪一格。
+     靠顺序分配列的话，一藏源码，谱面就掉进第 1 列（宽度 0），整页都没了。 */
+  grid-template-columns: minmax(320px, 34%) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "tools tools"
+    "left  pages";
+  gap: 14px;
+  padding: 14px;
+  align-items: stretch;
+}
+#tools { grid-area: tools; }
+#left { grid-area: left; }
+#pages { grid-area: pages; }
+#left { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+#src {
+  flex: 1;
+  min-height: 320px;
+  width: 100%;
+  resize: none;
+  padding: 12px 14px;
+  border: 1px solid #262a31;
+  border-radius: 8px;
+  background: #14161a;
+  color: #d8dee9;
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  tab-size: 2;
+  outline: none;
+}
+#src:focus { border-color: #3d6ea8; }
+
+/* 告警条：放在顶栏下面，源码栏藏起来时也看得见 */
+#diag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  max-height: 84px;
+  overflow: auto;
+  font-size: 12px;
+  color: var(--warn);
+  background: #1a1c21;
+  border-bottom: 1px solid #262a31;
+  padding: 6px 14px;
+}
+#diag:empty { display: none; }
+#diag .e { color: var(--err); }
+
+/* 源码栏默认藏起来：谱面占满，手感是「看着谱打谱」 */
+#wrap.src-hidden {
+  grid-template-columns: 0 1fr;
+  grid-template-areas:
+    "tools tools"
+    "left  pages";
+  gap: 14px 0;
+}
+#wrap.src-hidden #left { display: none; }
+#bar #btnSrc.on { background: #2f6fd0; border-color: #2f6fd0; }
+
+/* ---------------------------------------------------------------- 谱面 */
+#pages {
+  overflow: auto;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 40px;
+}
+#pages svg.page {
+  /* flex 子项默认会被压缩：#pages 是 column flex，整页 SVG 比容器高时会被挤扁，
+     连带里面的字和八度点一起缩小（曾经就是这样，八度点看着只有 1.2px） */
+  flex: none;
+  background: var(--paper);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .35);
+  border-radius: 2px;
+  display: block;
+}
+#pages .note.active text.digit { fill: #d33; }
+#pages svg.page g.note { cursor: grab; }
+#pages svg.page g.note:active { cursor: grabbing; }
+#pages svg.page g.note rect.selhl { fill: rgba(78, 161, 255, .16); stroke: #4ea1ff; stroke-width: 1.5; }
+#pages svg.page g.note.sel text.digit { fill: #1d64c7; }
+
+/* 服务器文件选择弹层 */
+.fp {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 90px;
+  transform: translateX(-50%);
+  width: min(560px, 92vw);
+  max-height: 70vh;
+  overflow: auto;
+  background: #14161a;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .55);
+  padding: 6px;
+}
+.fp-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px 10px;
+  color: #cfd3da;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.fp-x { cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px; color: #9aa0ab; }
+.fp-x:hover { color: #fff; }
+.fp-i {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--fg);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.fp-i:hover { background: #23272f; }
+.fp-i small { color: #7d838f; font-size: 11px; }
+.fp-e { padding: 14px; color: #8b909b; font-size: 13px; }
+/* 新建曲谱的表单 */
+.fp-f { display: flex; flex-direction: column; gap: 9px; padding: 10px 14px 4px; }
+.fp-f label { display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #b9bec7; font-size: 13px; }
+.fp-f input, .fp-f select {
+  flex: 1 1 240px; max-width: 280px; min-width: 0;
+  background: var(--ui2); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 5px 8px; font: inherit; font-size: 13px;
+}
+.fp-f input:focus, .fp-f select:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+/* 谱面插入光标 */
+#pages svg.page g.caret { pointer-events: none; }
+#pages svg.page g.caret line { animation: caretBlink 1.05s steps(1, end) infinite; }
+@keyframes caretBlink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0.12; } }
+@media (prefers-reduced-motion: reduce) {
+  #pages svg.page g.caret line { animation: none; }
+}
+
+/* 快捷键帮助 */
+.hk-wrap { display: flex; flex-direction: column; gap: 1px; padding: 6px 14px 10px; }
+.hk-h { margin: 8px 0 3px; color: #8fd0a8; font-size: 12px; font-weight: 700; letter-spacing: .5px; }
+.hk { display: flex; align-items: baseline; gap: 10px; padding: 2px 0; }
+.hk kbd {
+  flex: 0 0 190px; text-align: right;
+  color: #cfd3da; font: 12px/1.6 ui-monospace, Menlo, Consolas, monospace;
+}
+.hk span { color: #a8aeb9; font-size: 12.5px; }
+
+.fp-act { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 14px 12px; }
+.fp-act button {
+  background: var(--ui2); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 16px; font-size: 13px; cursor: pointer;
+}
+.fp-act button:hover { background: #343845; }
+.fp-act button.primary2 { background: #256b4a; border-color: #256b4a; }
+.fp-act button.primary2:hover { background: #2e8259; }
+
+#toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  max-width: 60vw;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: rgba(18, 20, 24, .94);
+  color: #dbe7fb;
+  border: 1px solid #3d6ea8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .18s, transform .18s;
+  pointer-events: none;
+}
+#toast.on { opacity: 1; transform: translateY(0); }
+
+#marquee {
+  position: fixed;
+  display: none;
+  border: 1px solid #4ea1ff;
+  background: rgba(78, 161, 255, .14);
+  pointer-events: none;
+  z-index: 40;
+}
+.draghint {
+  position: fixed;
+  display: none;
+  z-index: 41;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(20, 22, 26, .92);
+  color: #cfe4ff;
+  border: 1px solid #3d6ea8;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- 打印 */
+@media print {
+  html, body { background: #fff; height: auto; }
+  #bar, #tools, #left, #diag, /* 服务器文件选择弹层 */
+.fp {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 90px;
+  transform: translateX(-50%);
+  width: min(560px, 92vw);
+  max-height: 70vh;
+  overflow: auto;
+  background: #14161a;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .55);
+  padding: 6px;
+}
+.fp-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px 10px;
+  color: #cfd3da;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.fp-x { cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px; color: #9aa0ab; }
+.fp-x:hover { color: #fff; }
+.fp-i {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--fg);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.fp-i:hover { background: #23272f; }
+.fp-i small { color: #7d838f; font-size: 11px; }
+.fp-e { padding: 14px; color: #8b909b; font-size: 13px; }
+
+#toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  max-width: 60vw;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: rgba(18, 20, 24, .94);
+  color: #dbe7fb;
+  border: 1px solid #3d6ea8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .18s, transform .18s;
+  pointer-events: none;
+}
+#toast.on { opacity: 1; transform: translateY(0); }
+
+#marquee { display: none !important; }
+  #wrap { display: block; padding: 0; height: auto; }
+  #pages { display: block; overflow: visible; gap: 0; padding: 0; }
+  #pages svg.page {
+    box-shadow: none;
+    border-radius: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  @page { size: A4 portrait; margin: 0; }
+}
+
+/* ======================================================= JPWORD 版式 */
+
+#menubar, #status { display: none; }
+
+/* 菜单栏：Word 那种一排下拉 */
+body.layout-jpw #menubar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: #1a1d23;
+  border-bottom: 1px solid #000;
+  padding: 0 4px;
+  height: 28px;
+  flex: none;
+}
+body.layout-jpw #menubar .m {
+  display: flex; align-items: center;
+  padding: 0 11px; cursor: pointer;
+  color: #c6ccd6; font-size: 12.5px; user-select: none;
+}
+body.layout-jpw #menubar .m:hover { background: #2b3038; }
+body.layout-jpw #menubar .m.open { background: #2f6fd0; color: #fff; }
+/* 菜单栏右端的快速按钮（像 Word 的快速访问工具栏） */
+body.layout-jpw #menubar .quick { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+body.layout-jpw #menubar .quick button {
+  background: var(--ui2); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 5px; padding: 2px 9px; font-size: 12px; cursor: pointer;
+}
+body.layout-jpw #menubar .quick button:hover { background: #343845; }
+body.layout-jpw #menubar .mzoom { display: flex; align-items: center; gap: 3px; color: #99a0ab; font-size: 11.5px; }
+body.layout-jpw #menubar .mzoom button { padding: 2px 7px; }
+/* JPWORD 版式用菜单栏替代顶栏 */
+body.layout-jpw #bar { display: none; }
+body.layout-jpw .menu-pop {
+  position: fixed; z-index: 70;
+  min-width: 210px; padding: 4px;
+  background: #14161a; border: 1px solid var(--line);
+  border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.55);
+}
+body.layout-jpw .menu-pop .mi {
+  display: flex; justify-content: space-between; gap: 18px;
+  padding: 6px 10px; border-radius: 5px;
+  color: #d6dbe4; font-size: 12.5px; cursor: pointer;
+}
+body.layout-jpw .menu-pop .mi:hover { background: #2f6fd0; color: #fff; }
+body.layout-jpw .menu-pop .mi .k { color: #8b909b; font-size: 11px; }
+body.layout-jpw .menu-pop .mi:hover .k { color: #dbe6f7; }
+body.layout-jpw .menu-pop .sep { height: 1px; background: var(--line); margin: 4px 6px; }
+
+/* 左侧竖排工具窗：原来横着的一条，竖起来贴着谱面 */
+body.layout-jpw #tools {
+  grid-area: tools;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow-y: auto;
+  align-items: flex-start;
+  background: #1a1d23;
+  border-right: 1px solid #000;
+  padding: 8px 6px;
+  gap: 6px;
+  width: 92px;
+}
+body.layout-jpw #tools .tgrp {
+  flex-direction: column;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 6px;
+  width: 100%;
+  gap: 3px;
+}
+body.layout-jpw #tools .tbtn { width: 100%; text-align: center; }
+body.layout-jpw #selinfo { display: none; }
+
+/* 谱面区：左工具窗 + 右谱面 */
+body.layout-jpw #wrap {
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  grid-template-areas: "tools pages";
+  gap: 0;
+  padding: 10px 14px;
+}
+body.layout-jpw #wrap.src-hidden {
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-areas: "tools pages";
+}
+body.layout-jpw #wrap.src-hidden #left { display: none; }
+/* 源码展开时插在工具窗和谱面之间 */
+body.layout-jpw #wrap:not(.src-hidden) {
+  grid-template-columns: 92px minmax(260px, 30%) minmax(0, 1fr);
+  grid-template-areas: "tools left pages";
+}
+body.layout-jpw #wrap:not(.src-hidden) #left { display: flex; }
+
+/* 状态栏 */
+body.layout-jpw #status {
+  display: flex; align-items: center; gap: 18px;
+  height: 26px; flex: none;
+  background: #1a1d23; border-top: 1px solid #000;
+  color: #99a0ab; font-size: 11.5px; padding: 0 12px;
+}
+body.layout-jpw #status b { color: #cfd3da; font-weight: 500; }
+body.layout-jpw #status .sp { margin-left: auto; }

@@ -1,0 +1,10 @@
+{
+  "id": "jianpu-md",
+  "name": "Jianpu MD",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Render Chinese numbered notation (jianpu) from code blocks into printable SVG, with synthesised erhu playback.",
+  "author": "lteian",
+  "authorUrl": "https://github.com/lteian",
+  "isDesktopOnly": false
+}

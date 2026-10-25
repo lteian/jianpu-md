@@ -1,0 +1,5 @@
+# 保证仓库里一律 LF：actions.Checkout（Linux CI）与本地 checkout 行为一致，
+# tests/edit.test.mjs 里「只改动被编辑的行」的断言依赖稳定行尾
+* text=auto eol=lf
+*.png binary
+*.svg text

@@ -1,0 +1,65 @@
+/* Obsidian 插件：简谱（jianpu-md） */
+
+.jianpu-block {
+  position: relative;
+  margin: 0.4em 0 1em;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  overflow: hidden;
+}
+
+/* 工具条 */
+.jianpu-block .jp-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+.jianpu-block .jp-btn {
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  padding: 1px 9px;
+  font-size: 12px;
+  line-height: 1.7;
+  cursor: pointer;
+}
+.jianpu-block .jp-btn:hover { background: var(--interactive-hover); }
+.jianpu-block .jp-play { color: var(--text-accent); }
+.jianpu-block .jp-sep { width: 1px; height: 16px; background: var(--background-modifier-border); margin: 0 3px; }
+.jianpu-block .jp-zoom { color: var(--text-muted); font-size: 11.5px; min-width: 40px; text-align: center; }
+
+/* 谱面 */
+.jianpu-block .jp-pages {
+  padding: 8px;
+  overflow-x: auto;
+  background: var(--background-primary);
+}
+.jianpu-block svg.page {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .18);
+}
+.jianpu-block svg.page + svg.page { margin-top: 10px; }
+
+/* 播放高亮（和 web/style.css 里一致） */
+.jianpu-block .note.active text.digit { fill: #d33; }
+
+/* 告警 / 错误 */
+.jianpu-block .jianpu-warn,
+.jianpu-block .jianpu-err {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  border-top: 1px solid var(--background-modifier-border);
+}
+.jianpu-block .jianpu-warn { color: var(--text-warning, #c9962c); background: rgba(201, 150, 44, .08); }
+.jianpu-block .jianpu-err { color: var(--text-error, #d33); background: rgba(211, 51, 51, .08); }

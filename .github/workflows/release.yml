@@ -1,0 +1,51 @@
+name: Release Obsidian plugin
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify tag matches manifest version
+        run: |
+          VER=$(node -p "require('./plugin/manifest.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "manifest version: $VER / tag: $GITHUB_REF_NAME"
+          if [ "$TAG" != "$VER" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match manifest version $VER"
+            echo "Obsidian looks for a release whose tag equals manifest.json version exactly."
+            exit 1
+          fi
+
+      - name: Build
+        run: |
+          npm ci
+          npm run plugin:pack
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          files: |
+            dist-plugin/jianpu-md/main.js
+            dist-plugin/jianpu-md/manifest.json
+            dist-plugin/jianpu-md/styles.css
+            dist-plugin/jianpu-md.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

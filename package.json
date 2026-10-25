@@ -1,0 +1,53 @@
+{
+  "name": "jianpu-md",
+  "version": "0.1.0",
+  "description": "纯文本简谱（jianpu-md）渲染器与播放器：Markdown/TXT 写谱 → 打印级 SVG → 二胡音色播放",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "jianpu": "./bin/jianpu.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -p tsconfig.json --watch",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "cli": "node bin/jianpu.mjs",
+    "serve": "python3 tools/serve.py 8080",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "plugin": "node plugin/esbuild.config.mjs --production",
+    "plugin:watch": "node plugin/esbuild.config.mjs",
+    "plugin:pack": "node plugin/esbuild.config.mjs --production && node plugin/pack.mjs",
+    "check:plugin": "tsc -p plugin/tsconfig.json"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "obsidian": "^1.8.7",
+    "typescript": "^5.6.0"
+  },
+  "keywords": [
+    "jianpu",
+    "简谱",
+    "numbered-notation",
+    "erhu",
+    "二胡",
+    "music-notation",
+    "svg"
+  ]
+}
